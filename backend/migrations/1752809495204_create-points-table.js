@@ -40,7 +40,7 @@ export const up = (pgm) => {
     },
   });
 
-  pgm.addConstraint('points', 'unique_user_date', 'UNIQUE(userId, date)');
+  pgm.addConstraint('points', 'unique_user_date', 'UNIQUE("userId", date)');
 };
 
 /**
