@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
@@ -9,38 +10,45 @@ export const shorthands = undefined;
  * @returns {Promise<void> | void}
  */
 export const up = (pgm) => {
-  pgm.createTable('points', {
+  pgm.createTable('achievements', {
     id: {
       type: 'VARCHAR(50)',
       primaryKey: true,
     },
-    userId: {
+    name: {
+      type: 'VARCHAR(100)',
+      notNull: true,
+      unique: true,
+    },
+    description: {
+      type: 'TEXT',
+      notNull: true,
+    },
+    // Type of achievement (e.g., 'point_based', 'streak_based', 'total_duration_based')
+    type: {
       type: 'VARCHAR(50)',
       notNull: true,
-      references: '"users"(id)',
-      onDelete: 'cascade',
     },
-    date: {
-      type: 'DATE',
-      notNull: true,
-    },
-    points: {
+    // The value needed to unlock (e.g., 1000 for points, 7 for streaks)
+    threshold: {
       type: 'INTEGER',
       notNull: true,
     },
-    createdAt: {
-      type: 'TIMESTAMP',
-      default: pgm.func('CURRENT_TIMESTAMP'),
-      notNull: true,
+    image_url: { // Optional: for display in UI
+      type: 'TEXT',
+      notNull: false,
     },
-    updatedAt: {
+    created_at: {
       type: 'TIMESTAMP',
-      default: pgm.func('CURRENT_TIMESTAMP'),
       notNull: true,
+      default: pgm.func('CURRENT_TIMESTAMP'),
+    },
+    updated_at: {
+      type: 'TIMESTAMP',
+      notNull: true,
+      default: pgm.func('CURRENT_TIMESTAMP'),
     },
   });
-
-  pgm.addConstraint('points', 'unique_user_date', 'UNIQUE("userId", date)');
 };
 
 /**
@@ -49,5 +57,5 @@ export const up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 export const down = (pgm) => {
-  pgm.dropTable('points');
+  pgm.dropTable('achievements');
 };

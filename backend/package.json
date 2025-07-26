@@ -1,11 +1,11 @@
 {
-  "name": "backend",
+  "name": "tidurio-api",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "migrate": "node-pg-migrate"
+    "migrate": "node-pg-migrate",
+    "test": "jest --detectOpenHandles --forceExit"
   },
   "keywords": [],
   "author": "",
@@ -13,16 +13,33 @@
   "description": "",
   "dependencies": {
     "@hapi/hapi": "^21.4.0",
+    "@hapi/inert": "^7.1.0",
+    "@hapi/jwt": "^3.2.0",
+    "@hapi/vision": "^7.0.3",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.0",
+    "hapi-swagger": "^17.3.2",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.1.5",
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "babel-jest": "^30.0.5",
     "eslint": "^9.31.0",
     "eslint-config-dicodingacademy": "^0.9.5",
-    "node-pg-migrate": "^8.0.3"
+    "jest": "^30.0.5",
+    "node-pg-migrate": "^8.0.3",
+    "supertest": "^7.1.4"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(js|jsx|mjs|cjs|ts|tsx)$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(nanoid)/)"
+    ]
   }
 }

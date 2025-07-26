@@ -1,0 +1,337 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sleep Tracker API",
+    "version": "1.0.0",
+    "description": "API for managing sleep logs, calculating points, and tracking streaks for the Sleep Tracker application."
+  },
+  "servers": [
+    {
+      "url": "https://your-app-name.onrender.com",
+      "description": "Production server (after deployment)"
+    },
+    {
+      "url": "http://localhost:5000",
+      "description": "Local development server (adjust port if needed)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Sleep Logs",
+      "description": "Operations related to starting and ending user sleep sessions."
+    },
+    {
+      "name": "Users",
+      "description": "Operations related to user profiles, points, and streaks."
+    }
+  ],
+  "paths": {
+    "/sleeps": {
+      "post": {
+        "summary": "Start a new sleep log",
+        "operationId": "startSleep",
+        "tags": ["Sleep Logs"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "description": "The unique ID of the user starting the sleep session.",
+                    "example": "user-abcde12345"
+                  }
+                },
+                "required": ["userId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sleep log started successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Sleep log started successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sleepLogId": {
+                          "type": "string",
+                          "description": "The ID of the newly created sleep log.",
+                          "example": "sleep-xyz123abc456"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (e.g., missing userId).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sleeps/{sleepLogId}/end": {
+      "put": {
+        "summary": "End an existing sleep log",
+        "operationId": "endSleep",
+        "tags": ["Sleep Logs"],
+        "parameters": [
+          {
+            "name": "sleepLogId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the sleep log to end.",
+            "example": "sleep-xyz123abc456"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "description": "The ID of the user who owns this sleep log.",
+                    "example": "user-abcde12345"
+                  }
+                },
+                "required": ["userId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sleep log ended successfully, and points/streak calculated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Sleep log ended successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sleepLogId": {
+                          "type": "string",
+                          "example": "sleep-xyz123abc456"
+                        },
+                        "durationMinutes": {
+                          "type": "number",
+                          "description": "Total sleep duration in minutes.",
+                          "example": 540
+                        },
+                        "pointsAwarded": {
+                          "type": "number",
+                          "description": "Points awarded for this sleep session (base + streak bonus).",
+                          "example": 140
+                        },
+                        "totalPoints": {
+                          "type": "number",
+                          "description": "The user's new total points.",
+                          "example": 190
+                        },
+                        "currentStreak": {
+                          "type": "number",
+                          "description": "The user's new current sleep streak.",
+                          "example": 3
+                        },
+                        "newlyUnlockedAchievements": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "List of names of any achievements newly unlocked in this session.",
+                          "example": ["Early Bird", "Consistent Sleeper"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (e.g., missing userId, sleep log already ended).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (user ID does not match sleep log owner).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found (sleep log not found).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{userId}/points": {
+      "get": {
+        "summary": "Get a user's total points and current streak",
+        "operationId": "getUserPointsAndStreak",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The unique ID of the user.",
+            "example": "user-abcde12345"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User points and streak retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "userId": {
+                          "type": "string",
+                          "example": "user-abcde12345"
+                        },
+                        "totalPoints": {
+                          "type": "number",
+                          "description": "The user's current total points.",
+                          "example": 500
+                        },
+                        "currentStreak": {
+                          "type": "number",
+                          "description": "The user's current sleep streak.",
+                          "example": 10
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found (user not found).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["fail", "error"],
+            "example": "fail"
+          },
+          "message": {
+            "type": "string",
+            "example": "Resource not found"
+          }
+        }
+      }
+    }
+  }
+}
