@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
@@ -14,25 +15,44 @@ export const up = (pgm) => {
       type: 'VARCHAR(50)',
       primaryKey: true,
     },
-    userId: {
+    user_id: { // Renamed from userId for consistency with snake_case
       type: 'VARCHAR(50)',
       notNull: true,
       references: 'users(id)',
       onDelete: 'cascade',
     },
-    sleepTime: {
+    start_time: { // Renamed from sleepTime
       type: 'TIMESTAMP',
       notNull: true,
     },
-    wakeTime: {
+    end_time: { // Renamed from wakeTime
+      type: 'TIMESTAMP',
+      notNull: false, // Can be null initially when 'start sleep' is tapped
+      default: null,
+    },
+    duration_minutes: { // Duration calculated in minutes
+      type: 'INTEGER',
+      notNull: false, // Can be null until end_time is recorded
+      default: null,
+    },
+    points_awarded: { // New: Points specific to this single sleep log
+      type: 'INTEGER',
+      notNull: true,
+      default: 0,
+    },
+    // New: The calendar date this sleep log primarily occurred on (e.g., the date of end_time)
+    // Crucial for streak calculation and daily summaries.
+    sleep_date: {
+      type: 'DATE',
+      notNull: false, // Can be null if end_time is null
+      default: null,
+    },
+    created_at: {
       type: 'TIMESTAMP',
       notNull: true,
+      default: pgm.func('CURRENT_TIMESTAMP'),
     },
-    duration: {
-      type: 'INTEGER', // dalam menit
-      notNull: true,
-    },
-    createdAt: {
+    updated_at: { // Added for consistency
       type: 'TIMESTAMP',
       notNull: true,
       default: pgm.func('CURRENT_TIMESTAMP'),
