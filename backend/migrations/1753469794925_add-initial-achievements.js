@@ -1,7 +1,9 @@
-// migrations/YYYYMMDDHHMMSS_add_initial_achievements.js
+// migrations/1753469794925_add-initial-achievements.js
 const { nanoid } = require('nanoid'); // Import nanoid for unique IDs
 
-exports.up = (pgm) => {
+const shorthands = undefined;
+
+const up = (pgm) => {
   // Clear existing achievements if any, to ensure consistent state for testing
   pgm.sql('DELETE FROM achievements');
 
@@ -15,7 +17,7 @@ exports.up = (pgm) => {
   `);
 };
 
-exports.down = (pgm) => {
+const down = (pgm) => {
   // Optionally, remove only the achievements added by this migration
   // For simplicity, we can remove all seeded achievements
   pgm.sql(`
@@ -23,3 +25,5 @@ exports.down = (pgm) => {
     WHERE name IN ('Early Bird', 'Sleep Novice', 'Consistent Sleeper', 'Sleep Master');
   `);
 };
+
+module.exports = { shorthands, up, down };
