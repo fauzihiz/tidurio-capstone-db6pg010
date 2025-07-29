@@ -7,16 +7,15 @@ const pool = require('./src/services/db/postgres');
 const users = require('./src/api/users');
 const sleeps = require('./src/api/sleeps'); // Import the new sleeps plugin
 const Jwt = require('@hapi/jwt');
-//const path = require('path');
-//const fs = require('fs'); // To read the JSON file directly
 const Inert = require('@hapi/inert'); // Required for hapi-swagger
 const Vision = require('@hapi/vision'); // Required for hapi-swagger
 const HapiSwagger = require('hapi-swagger'); // The swagger plugin
+const Joi = require('joi');
 
 const init = async () => {
   const server = Hapi.server({
     port: config.app.port,
-    host: 'localhost',
+    host: '0.0.0.0',
     routes: {
       cors: {
         origin: ['*'],
@@ -24,33 +23,31 @@ const init = async () => {
     },
   });
 
-  // Load the OpenAPI specification JSON file
-  //const openapiSpecPath = path.join(__dirname, 'openapi.json'); // Adjust path if openapi.json is in a 'docs' folder
-  //console.log('Attempting to read OpenAPI spec from:', openapiSpecPath); //for debugging
   const swaggerOptions = {
     info: {
       title: 'Sleep Tracker Tidur.io API Documentation',
       version: '1.0.0',
+      description: 'API for managing user sleep logs, calculating points, and tracking streaks for the Tidur.io application.'
     },
-    // Point to your OpenAPI spec. hapi-swagger will load this.
-    // It's usually better to let hapi-swagger generate the paths dynamically
-    // if your routes are defined directly within Hapi.
-    // However, since we pre-defined the openapi.json, we'll configure it to use that.
     jsonPath: '/openapi.json', // Path where the raw JSON spec will be served
     documentationPath: '/api-docs', // Path where the Swagger UI will be served
-    jsonEditor: true, // Enable JSON editor for testing requests in the UI
-    securityDefinitions: { // Example for authentication (if you add it later)
-      Bearer: {
+    // FIXED: Removed jsonEditor (not a valid hapi-swagger option)
+    // FIXED: Use proper Swagger 2.0 security definitions
+    securityDefinitions: {
+      'Bearer': {
         type: 'apiKey',
         name: 'Authorization',
         in: 'header',
-        description: 'Enter your bearer token in the format **Bearer &lt;token>**'
+        description: 'Enter your bearer token in the format: Bearer <token>'
       }
     },
     grouping: 'tags', // Group endpoints by tags in the UI
-    // This is a common pattern: provide the entire spec via a custom route
-    // and tell hapi-swagger where to find it.
-    swaggerDefinition: JSON.parse(fs.readFileSync(openapiSpecPath, 'utf8')),
+    tags: [ // Define your tags here, which your routes will then use
+      { name: 'Users', description: 'User authentication and profile data' },
+      { name: 'Sleeps', description: 'Sleep log management and progress' },
+      { name: 'health', description: 'API health and status endpoints' },
+      { name: 'database', description: 'Database connection and test endpoints' },
+    ],
   };
 
   // Register JWT plugin FIRST
@@ -76,27 +73,31 @@ const init = async () => {
   });
 
   // Set 'jwt_strategy' as the default authentication strategy for all routes
-  server.auth.default('jwt_strategy');
+  //server.auth.default('jwt_strategy');
 
   // Register Hapi plugins for authentication and features
   await server.register([
-    Inert,
-    Vision,
+    {
+      plugin: Inert,
+    },
+    {
+      plugin: Vision,
+    },
     {
       plugin: HapiSwagger,
       options: swaggerOptions,
     },
     {
-      plugin: users.plugin,
+      plugin: users.plugin, //users route
       options: users.options,
     },
     {
-      plugin: sleeps.plugin, // Register the sleeps plugin
+      plugin: sleeps.plugin, // sleeps route
       options: sleeps.options,
     }
   ]);
 
-  // Basic route for testing server health (unchanged)
+  // Basic route for testing server health
   server.route({
     method: 'GET',
     path: '/',
@@ -104,13 +105,24 @@ const init = async () => {
       return 'Hello, Tidurio API!';
     },
     options: {
+      auth: false, // Explicitly disable auth for this route
       tags: ['api', 'health'],
       description: 'Health check endpoint',
       notes: 'Returns a simple greeting to verify the API is running',
+      plugins: {
+        'hapi-swagger': {
+          responses: {
+            '200': {
+              description: 'Successful operation',
+              schema: Joi.string().example('Hello, Tidurio API!').label('RootResponse'),
+            },
+          },
+        },
+      }
     },
   });
 
-  // Route to test DB connection (unchanged)
+  // Route to test DB connection
   server.route({
     method: 'GET',
     path: '/db-test',
@@ -124,16 +136,30 @@ const init = async () => {
       }
     },
     options: {
+      auth: false, // Explicitly disable auth for this route
       tags: ['api', 'database'],
       description: 'Database connection test',
       notes: 'Tests the database connection and returns current timestamp',
+      plugins: {
+        'hapi-swagger': {
+          responses: {
+            '200': {
+              description: 'Database connected successfully',
+              schema: Joi.string().example('Database connected! Current time from DB: 2025-07-27T10:16:12.000Z').label('DbTestSuccessResponse'),
+            },
+            '500': {
+              description: 'Database connection failed',
+              schema: Joi.string().example('Database connection failed').label('DbTestErrorResponse'),
+            },
+          },
+        },
+      },
     },
   });
 
   await server.start();
   console.log(`🚀 Server berjalan pada ${server.info.uri}`);
   console.log(`📚 API Docs available at ${server.info.uri}/api-docs`);
-  console.log(`📄 OpenAPI JSON available at ${server.info.uri}/openapi.json`);
 };
 
 process.on('unhandledRejection', (err) => {
