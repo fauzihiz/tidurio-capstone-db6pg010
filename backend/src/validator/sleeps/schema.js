@@ -15,4 +15,4 @@ const EndSleepPayloadSchema = Joi.object({
   // No required fields for 'end' as endTime is server-generated.
 }).unknown(false);
 
-module.exports = { StartSleepPayloadSchema, SleepLogIdParamSchema, EndSleepPayloadSchema };
+module.exports = { SleepLogIdParamSchema, EndSleepPayloadSchema };
