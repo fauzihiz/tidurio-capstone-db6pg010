@@ -194,27 +194,235 @@ tidurio-capstone-db6pg010/
 
 🔗 [API Docs Swagger](https://tidurio-capstone-db6pg010-production.up.railway.app/api-docs)
 
-| Method | Endpoint                  | Deskripsi                             | Auth | Body Params / Query                |
-| ------ | ------------------------- | ------------------------------------- | ---- | ---------------------------------- |
-| POST   | `/users`                  | Register user baru                    | ❌    | `username`, `password`, `fullname` |
-| POST   | `/authentications`        | Login dan dapatkan access token       | ❌    | `username`, `password`             |
-| PUT    | `/authentications`        | Refresh access token                  | ❌    | `refreshToken`                     |
-| DELETE | `/authentications`        | Logout dan hapus refresh token        | ❌    | `refreshToken`                     |
-| GET    | `/users/me`               | Dapatkan profil pengguna saat ini     | ✅    | -                                  |
-| POST   | `/sleeps`                 | Logging tidur                         | ✅    | `date`, `startTime`, `endTime`     |
-| GET    | `/sleeps`                 | Ambil semua data tidur                | ✅    | -                                  |
-| GET    | `/sleeps/today`           | Ambil data tidur hari ini             | ✅    | -                                  |
-| PUT    | `/sleeps/{id}`            | Update data tidur tertentu            | ✅    | `date`, `startTime`, `endTime`     |
-| DELETE | `/sleeps/{id}`            | Hapus data tidur tertentu             | ✅    | -                                  |
-| GET    | `/dashboard/summary`      | Ringkasan total tidur, rata-rata, dll | ✅    | -                                  |
-| GET    | `/dashboard/progress`     | Perkembangan tidur (grafik mingguan)  | ✅    | -                                  |
-| GET    | `/dashboard/gamification` | Dapatkan data poin & streak user      | ✅    | -                                  |
-| GET    | `/achievements`           | Lihat daftar pencapaian               | ✅    | -                                  |
-| GET    | `/achievements/user`      | Lihat pencapaian milik user           | ✅    | -                                  |
-| POST   | `/exports/playlists`      | Ekspor playlist via email (demo)      | ✅    | `targetEmail`                      |
-| GET    | `/albums/{id}/likes`      | Lihat jumlah like pada album          | ✅    | -                                  |
-| POST   | `/albums/{id}/likes`      | Like/unlike album                     | ✅    | -                                  |
 
+| Method | Endpoint | Auth | Deskripsi |
+|--------|----------|------|-----------|
+| `POST` | `/register` | ❌ | Mendaftarkan akun pengguna baru |
+| `POST` | `/login` | ❌ | Autentikasi pengguna dan mendapatkan token JWT |
+| `GET` | `/users/{id}` | ✅ | Mendapatkan detail pengguna berdasarkan ID |
+| `GET` | `/dashboard` | ✅ | Mendapatkan data dashboard pengguna |
+
+### 😴 API Log Tidur
+
+| Method | Endpoint | Auth | Deskripsi |
+|--------|----------|------|-----------|
+| `POST` | `/sleeps/start` | ✅ | Memulai sesi pencatatan tidur baru |
+| `PUT` | `/sleeps/{sleepLogId}/end` | ✅ | Mengakhiri sesi tidur dan menghitung hasil |
+
+## 🚀 Penjelasan
+
+### 1. Mendaftarkan pengguna baru
+```bash
+curl -X POST https://tidurio-capstone-db6pg010-production.up.railway.app/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john.doe",
+    "password": "passwordaman123"
+  }'
+```
+
+### 2. Login untuk mendapatkan token JWT
+```bash
+curl -X POST https://tidurio-capstone-db6pg010-production.up.railway.app/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john.doe",
+    "password": "passwordaman123"
+  }'
+```
+
+### 3. Menggunakan token untuk endpoint yang dilindungi
+```bash
+curl -X GET https://tidurio-capstone-db6pg010-production.up.railway.app/dashboard \
+  -H "Authorization: Bearer TOKEN_JWT_ANDA"
+```
+
+## 📝 Referensi API
+
+### POST `/register`
+**Deskripsi:** Mendaftarkan akun pengguna baru
+
+**Request Body:**
+```json
+{
+  "username": "string (3-50 karakter, wajib)",
+  "password": "string (minimal 6 karakter, wajib)"
+}
+```
+
+**Response:**
+- `201` - Pengguna berhasil didaftarkan
+- `400` - Bad Request (username sudah digunakan, input tidak valid)
+- `500` - Internal Server Error
+
+**Contoh Response:**
+```json
+{
+  "status": "success",
+  "message": "User registered successfully",
+  "data": {
+    "userId": "user-newuser123"
+  }
+}
+```
+
+### POST `/login`
+**Deskripsi:** Autentikasi pengguna dan mendapatkan token JWT
+
+**Request Body:**
+```json
+{
+  "username": "string (wajib)",
+  "password": "string (wajib)"
+}
+```
+
+**Response:**
+- `200` - Login berhasil
+- `400` - Kredensial tidak valid
+- `500` - Internal Server Error
+
+**Contoh Response:**
+```json
+{
+  "status": "success",
+  "message": "Login successful",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+### GET `/users/{id}`
+**Deskripsi:** Mendapatkan detail pengguna berdasarkan ID
+
+**Parameter:**
+- `id` (path) - ID Pengguna (wajib)
+
+**Response:**
+- `200` - Detail pengguna berhasil diambil
+- `401` - Tidak diotorisasi
+- `404` - Pengguna tidak ditemukan
+- `500` - Internal Server Error
+
+**Contoh Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "id": "user-abcde12345",
+    "username": "john.doe",
+    "totalPoints": 1200,
+    "currentStreak": 15,
+    "createdAt": "2025-07-20T10:00:00.000Z",
+    "updatedAt": "2025-07-27T08:00:00.000Z"
+  }
+}
+```
+
+### GET `/dashboard`
+**Deskripsi:** Mendapatkan data dashboard pengguna yang komprehensif
+
+**Response:**
+- `200` - Data dashboard berhasil diambil
+- `401` - Tidak diotorisasi
+- `500` - Internal Server Error
+
+**Contoh Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "userId": "user-abcde12345",
+    "totalPoints": 1500,
+    "currentStreak": 20,
+    "lastSleep": {},
+    "recentSleeps": [],
+    "unlockedAchievements": []
+  }
+}
+```
+
+### POST `/sleeps/start`
+**Deskripsi:** Memulai sesi pencatatan tidur baru
+
+**Response:**
+- `201` - Log tidur berhasil dimulai
+- `401` - Tidak diotorisasi
+- `500` - Internal Server Error
+
+**Contoh Response:**
+```json
+{
+  "status": "success",
+  "message": "Sleep log started successfully",
+  "data": {
+    "sleepLogId": "sleep-xyz123abc456"
+  }
+}
+```
+
+### PUT `/sleeps/{sleepLogId}/end`
+**Deskripsi:** Mengakhiri sesi tidur dan menghitung hasil
+
+**Parameter:**
+- `sleepLogId` (path) - ID Log Tidur (wajib)
+
+**Response:**
+- `200` - Log tidur berhasil diakhiri
+- `400` - Log tidur sudah diakhiri
+- `401` - Tidak diotorisasi
+- `404` - Log tidur tidak ditemukan
+- `500` - Internal Server Error
+
+**Contoh Response:**
+```json
+{
+  "status": "success",
+  "message": "Sleep log ended successfully",
+  "data": {
+    "sleepLogId": "sleep-xyz123abc456",
+    "durationMinutes": 540,
+    "pointsAwarded": 140,
+    "totalPoints": 190,
+    "currentStreak": 3,
+    "newlyUnlockedAchievements": ["Early Bird", "Consistent Sleeper"]
+  }
+}
+```
+
+## ⚠️ Penanganan Error
+
+Semua endpoint mengembalikan error dalam format berikut:
+
+```json
+{
+  "status": "error",
+  "message": "Deskripsi error"
+}
+```
+
+### Kode Status HTTP Umum
+- `200` - Berhasil
+- `201` - Berhasil Dibuat
+- `400` - Bad Request (Permintaan Buruk)
+- `401` - Tidak Diotorisasi
+- `404` - Tidak Ditemukan
+- `500` - Internal Server Error
+
+## 💡 Catatan Pengembangan
+
+### Struktur Response Standar
+Semua response sukses menggunakan struktur:
+```json
+{
+  "status": "success",
+  "message": "Pesan deskriptif",
+  "data": {
+    // Data hasil operasi
+  }
+}
+```
 ---
 
 ## 🛠️ Tools & Tech Stack
