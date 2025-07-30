@@ -14,6 +14,7 @@ const routes = (handler) => [
       validate: {
         payload: Joi.object({
           username: Joi.string().required().min(3).max(50).description('Unique username for the new account.'),
+          email: Joi.string().email().required().description('Email address for the new account.'),
           password: Joi.string().required().min(6).description('Password for the new account.'),
           // Add any other registration fields you might have (e.g., email, display name)
         }).label('RegisterUserPayload'),
@@ -49,7 +50,7 @@ const routes = (handler) => [
       tags: ['api', 'Users'], // Assign to the 'Users' tag
       validate: {
         payload: Joi.object({
-          username: Joi.string().required().description('Username for login.'),
+          email: Joi.string().email().required().description('Email address for login.'),
           password: Joi.string().required().description('Password for login.'),
         }).label('LoginPayload'),
       },
