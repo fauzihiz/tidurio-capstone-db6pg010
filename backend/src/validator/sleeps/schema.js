@@ -1,9 +1,9 @@
 // src/validator/sleeps/schema.js
 const Joi = require('joi');
 
-const StartSleepPayloadSchema = Joi.object({
+/*const StartSleepPayloadSchema = Joi.object({
   // No required fields for 'start' as userId comes from JWT and startTime from server.
-}).unknown(false);
+}).unknown(false);*/
 
 // New schema for path parameter validation (sleepLogId)
 const SleepLogIdParamSchema = Joi.object({

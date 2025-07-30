@@ -1,14 +1,14 @@
 // src/services/UserService.js
 const { nanoid } = require('nanoid');
 const bcrypt = require('bcrypt');
-const pool = require('./db/postgres');
+const pool = require('./db/postgres'); // Pastikan path ini benar ke instance pool database Anda
 const AuthenticationError = require('../exceptions/AuthenticationError');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
 
 class UserService {
   constructor() {
-    this._pool = pool;
+    this._pool = pool; // Menggunakan instance pool yang diimpor
   }
 
   async addUser({ username, email, password }) {
@@ -20,7 +20,7 @@ class UserService {
     const query = {
       text: `INSERT INTO users (id, username, email, password, total_points, current_streak, created_at, updated_at)
              VALUES($1, $2, $3, $4, $5, $6, NOW(), NOW()) RETURNING id`,
-      values: [id, username, email, hashedPassword, 0, 0],
+      values: [id, username, email, hashedPassword, 0, 0], // Default total_points dan current_streak
     };
 
     const result = await this._pool.query(query);
@@ -88,68 +88,116 @@ class UserService {
       throw new NotFoundError('User not found');
     }
 
-    return result.rows[0];
+    const user = result.rows[0];
+    return {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      totalPoints: user.total_points,
+      currentStreak: user.current_streak,
+      lastSleepDate: user.last_sleep_date,
+      createdAt: user.created_at,
+      updatedAt: user.updated_at,
+    };
   }
 
-  // New method: Get all data for the user dashboard
   async getUserDashboardData(userId) {
-    // Use Promise.all to fetch data concurrently
     const [
-      userResult,
+      userQueryResult,
       unlockedAchievementsResult,
       recentSleepLogsResult,
+      lastSleepResult,
     ] = await Promise.all([
-      // Query 1: User's total points and current streak
+      // Query 1: Data dasar pengguna (username, total_points, current_streak)
       this._pool.query({
         text: 'SELECT username, total_points, current_streak FROM users WHERE id = $1',
         values: [userId],
       }),
-      // Query 2: Unlocked achievements
+      // Query 2: Pencapaian yang sudah dibuka pengguna
       this._pool.query({
         text: `SELECT
-                a.id,
-                a.name,
-                a.description,
-                a.type,
-                a.threshold,
-                ua.achieved_at
-               FROM user_achievements ua
-               JOIN achievements a ON ua.achievement_id = a.id
-               WHERE ua.user_id = $1
-               ORDER BY ua.achieved_at DESC`,
+                 a.id,
+                 a.name,
+                 a.description,
+                 a.type,
+                 a.threshold,
+                 ua.achieved_at
+                FROM user_achievements ua
+                JOIN achievements a ON ua.achievement_id = a.id
+                WHERE ua.user_id = $1
+                ORDER BY ua.achieved_at DESC`,
         values: [userId],
       }),
-      // Query 3: Recent Sleep Logs (last 7 days, or where end_time is not null)
+      // Query 3: Log tidur terbaru (misal 7 hari terakhir)
       this._pool.query({
         text: `SELECT
-                id,
-                start_time,
-                end_time,
-                duration_minutes,
-                points_awarded,
-                sleep_date
-               FROM sleep_logs
-               WHERE user_id = $1 AND end_time IS NOT NULL AND sleep_date >= (NOW() - INTERVAL '7 days')::date
-               ORDER BY end_time DESC
-               LIMIT 7`, // Limit to last 7 entries for brevity
+                 id,
+                 start_time,
+                 end_time,
+                 duration_minutes,
+                 points_awarded,
+                 sleep_date
+                FROM sleep_logs
+                WHERE user_id = $1 AND end_time IS NOT NULL AND sleep_date >= (NOW() - INTERVAL '7 days')::date
+                ORDER BY sleep_date DESC, end_time DESC
+                LIMIT 7`,
+        values: [userId],
+      }),
+      // Query 4: Log tidur terakhir yang sudah selesai
+      this._pool.query({
+        text: `SELECT
+                 id,
+                 start_time,
+                 end_time,
+                 duration_minutes,
+                 points_awarded,
+                 sleep_date
+                FROM sleep_logs
+                WHERE user_id = $1 AND end_time IS NOT NULL
+                ORDER BY end_time DESC
+                LIMIT 1`,
         values: [userId],
       }),
     ]);
 
-    const user = userResult.rows[0];
+    const user = userQueryResult.rows[0];
     const unlockedAchievements = unlockedAchievementsResult.rows;
     const recentSleepLogs = recentSleepLogsResult.rows;
+    const lastSleep = lastSleepResult.rows[0] || null;
 
     if (!user) {
       throw new NotFoundError('User not found.');
     }
 
     return {
+      userId: userId,
       username: user.username,
       totalPoints: user.total_points,
       currentStreak: user.current_streak,
-      unlockedAchievements,
-      recentSleepLogs,
+      lastSleep: lastSleep ? {
+        id: lastSleep.id,
+        startTime: lastSleep.start_time,
+        endTime: lastSleep.end_time,
+        durationMinutes: lastSleep.duration_minutes,
+        points: lastSleep.points_awarded,
+        sleepDate: lastSleep.sleep_date,
+      } : null,
+      recentSleeps: recentSleepLogs.map((log) => ({
+        id: log.id,
+        startTime: log.start_time,
+        endTime: log.end_time,
+        durationMinutes: log.duration_minutes,
+        points: log.points_awarded,
+        sleepDate: log.sleep_date,
+      })),
+      unlockedAchievements: unlockedAchievements.map((ach) => ({
+        id: ach.id,
+        name: ach.name,
+        description: ach.description,
+        type: ach.type,
+        threshold: ach.threshold,
+        achievedAt: ach.achieved_at,
+      })),
     };
   }
 }

@@ -12,7 +12,7 @@ class SleepLogHandler {
 
   postStartSleepHandler = async (request, h) => {
     try {
-      this._validator.validate(request.payload, StartSleepPayloadSchema);
+      //this._validator.validate(request.payload, StartSleepPayloadSchema);
 
       const { userId } = request.auth.credentials;
       const sleepLogId = await this._service.startSleep(userId);
