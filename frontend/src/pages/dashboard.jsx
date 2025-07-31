@@ -388,7 +388,7 @@ const DashboardPage = () => {
           </section>
 
           <section className="p-4 md:p-6 bg-zinc-800 rounded-xl shadow-lg border border-zinc-700">
-            <h2 className="text-xl md:text-2xl font-bold mb-4 text-gray-200">Pencapaian Terbuka</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 text-gray-200">Achievement</h2>
             {dataToDisplay.unlockedAchievements && dataToDisplay.unlockedAchievements.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {dataToDisplay.unlockedAchievements.map((achievement) => (
@@ -402,7 +402,7 @@ const DashboardPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-center">Belum ada pencapaian yang terbuka. Teruslah tidur dengan baik!</p>
+              <p className="text-gray-400 text-center">Belum ada achievement yang terbuka. Teruslah tidur dengan baik!</p>
             )}
           </section>
         </TabsContent>
