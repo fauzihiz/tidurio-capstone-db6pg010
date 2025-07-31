@@ -3,7 +3,8 @@ import axios from 'axios';
 
 // Buat instance Axios dengan base URL dan interceptor
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  //baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://tidurio-capstone-db6pg010-production.up.railway.app/',
   timeout: 10000, // Timeout request dalam ms
 });
 
