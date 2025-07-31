@@ -11,23 +11,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useAuth } from "../contexts/authContext.jsx";
-import { login as loginApi } from "../services/api";
+import { loginUser as loginApi } from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 
 export function LoginForm({ className, ...props }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
     try {
+      console.log('LoginForm - Attempting login with:', form.email);
+      
       const res = await loginApi(form);
-      login(res.data.token);
-      navigate("/dashboard");
+      console.log('LoginForm - Login API response:', res.data);
+      
+      const accessToken = res.data.data.accessToken;
+      console.log('LoginForm - AccessToken received:', accessToken ? 'Yes' : 'No');
+      
+      // Use AuthContext login method
+      login(accessToken);
+      console.log('LoginForm - AuthContext login called');
+      
+      // Small delay to ensure AuthContext state is updated
+      setTimeout(() => {
+        console.log('LoginForm - Navigating to dashboard');
+        navigate("/dashboard");
+      }, 100);
+      
     } catch (err) {
+      console.error('LoginForm - Login error:', err);
+      console.error('LoginForm - Error response:', err.response?.data);
       setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,17 +75,12 @@ export function LoginForm({ className, ...props }) {
                 required
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                disabled={loading}
               />
             </div>
             <div className="grid gap-3">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <a
-                  href="#"
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </a>
               </div>
               <Input
                 id="password"
@@ -70,14 +88,12 @@ export function LoginForm({ className, ...props }) {
                 required
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
+                disabled={loading}
               />
             </div>
             <div className="flex flex-col gap-3">
-              <Button type="submit" className="w-full">
-                Login
-              </Button>
-              <Button variant="outline" className="w-full">
-                Login with Google
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
               </Button>
             </div>
           </form>

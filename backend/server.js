@@ -73,7 +73,7 @@ const init = async () => {
   });
 
   // Set 'jwt_strategy' as the default authentication strategy for all routes
-  //server.auth.default('jwt_strategy');
+  server.auth.default('jwt_strategy');
 
   // Register Hapi plugins for authentication and features
   await server.register([

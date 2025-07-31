@@ -121,11 +121,11 @@ class UserService {
                  a.description,
                  a.type,
                  a.threshold,
-                 ua.achieved_at
+                 ua.unlocked_at
                 FROM user_achievements ua
                 JOIN achievements a ON ua.achievement_id = a.id
                 WHERE ua.user_id = $1
-                ORDER BY ua.achieved_at DESC`,
+                ORDER BY ua.unlocked_at DESC`,
         values: [userId],
       }),
       // Query 3: Log tidur terbaru (misal 7 hari terakhir)
@@ -196,7 +196,7 @@ class UserService {
         description: ach.description,
         type: ach.type,
         threshold: ach.threshold,
-        achievedAt: ach.achieved_at,
+        unlockedAt: ach.unlocked_at,
       })),
     };
   }

@@ -28,8 +28,8 @@ class AchievementService {
   async addUnlockedAchievement(userId, achievementId, client) {
     const id = `user_achieve-${nanoid(16)}`;
     const query = {
-      text: `INSERT INTO user_achievements (id, user_id, achievement_id, achieved_at, created_at, updated_at)
-             VALUES($1, $2, $3, NOW(), NOW(), NOW()) RETURNING id`,
+      text: `INSERT INTO user_achievements (id, user_id, achievement_id, unlocked_at)
+             VALUES($1, $2, $3, NOW()) RETURNING id`,
       values: [id, userId, achievementId],
     };
     try {

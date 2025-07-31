@@ -1,5 +1,5 @@
 // src/api/sleeps/handler.js
-const { StartSleepPayloadSchema, SleepLogIdParamSchema, EndSleepPayloadSchema } = require('../../validator/sleeps/schema');
+const { SleepLogIdParamSchema } = require('../../validator/sleeps/schema');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthenticationError = require('../../exceptions/AuthenticationError'); // For authorization check
@@ -12,8 +12,6 @@ class SleepLogHandler {
 
   postStartSleepHandler = async (request, h) => {
     try {
-      //this._validator.validate(request.payload, StartSleepPayloadSchema);
-
       const { userId } = request.auth.credentials;
       const sleepLogId = await this._service.startSleep(userId);
 
@@ -53,7 +51,7 @@ class SleepLogHandler {
       // Validate path parameter
       this._validator.validate(request.params, SleepLogIdParamSchema);
       // Validate payload (empty for now)
-      this._validator.validate(request.payload, EndSleepPayloadSchema);
+      //this._validator.validate(request.payload, EndSleepPayloadSchema);
 
       const { sleepLogId } = request.params;
       const { userId } = request.auth.credentials; // Authenticated user ID

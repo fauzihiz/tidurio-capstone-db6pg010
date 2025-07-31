@@ -11,8 +11,8 @@ const SleepLogIdParamSchema = Joi.object({
 });
 
 // New schema for 'end' payload (empty for now, as endTime is server-generated)
-const EndSleepPayloadSchema = Joi.object({
+/*const EndSleepPayloadSchema = Joi.object({
   // No required fields for 'end' as endTime is server-generated.
-}).unknown(false);
+}).unknown(false);*/
 
-module.exports = { SleepLogIdParamSchema, EndSleepPayloadSchema };
+module.exports = { SleepLogIdParamSchema };
