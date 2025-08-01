@@ -64,10 +64,10 @@ class SleepLogService {
 
       const durationMinutes = Math.floor((endTime.getTime() - startTime.getTime()) / (1000 * 60));
 
-      // Calculate points (Example: 10 points per hour, min 8 hours for points)
+      // Calculate points (Example: 10 points per hour, min 7 hours for points)
       let pointsAwarded = 0;
-      const MIN_SLEEP_HOURS_FOR_POINTS = 8; // 8 hours threshold for points
-      if (durationMinutes >= MIN_SLEEP_HOURS_FOR_POINTS * 60) { // Check if duration meets 8-hour threshold (480 minutes)
+      const MIN_SLEEP_HOURS_FOR_POINTS = 7; // 7 hours threshold for points
+      if (durationMinutes >= MIN_SLEEP_HOURS_FOR_POINTS * 60) { // Check if duration meets 7-hour threshold
         pointsAwarded = Math.floor(durationMinutes / 60) * 10; // Base points: 10 points per hour, Example: 10 points per hour of good sleep
       }
 
